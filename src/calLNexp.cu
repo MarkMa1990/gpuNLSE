@@ -23,7 +23,7 @@ __global__ void calexp_nonlinear (cufftDoubleComplex *dev_exp_nonlinear, double 
     if(ix < Nx && iy < Ny)
     {
         exp_term_inner = k0*dev_dn_nonlinear[idx].y*dz;
-        exp_term = exp(exp_term_inner>1e-20?-exp_term:0);
+        exp_term = exp(exp_term_inner>1e-20?-exp_term_inner:0);
 
         dev_exp_nonlinear[idx].x = exp_term * cos(k0*dev_dn_nonlinear[idx].x*dz);
         dev_exp_nonlinear[idx].y = exp_term * sin(k0*dev_dn_nonlinear[idx].x*dz);

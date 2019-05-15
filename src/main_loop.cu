@@ -90,7 +90,7 @@ int main()
 
 
     // space discretization
-    double dx = 40e-9;
+    double dx = 60e-9;
     int Nx_cal = 1024;
     
     // time discretization
@@ -98,7 +98,7 @@ int main()
     int Nt_cal = 1024;
 
     // space in z
-    double dz = 30e-9;
+    double dz = 60e-9;
     int Nz_cal = 10;
 
 
@@ -261,7 +261,8 @@ int main()
     calexp_linear<<<grid_2d, block_2d>>>(dev_exp_linear, k00, host_laser_paras[8], dt, dx, dz, Nx_cal, Nt_cal);
     cudaThreadSynchronize();
 
-
+    clock_t time0, time1;
+    clock_t time0_all, time1_all;
   
     // output once
     // calculate phi_abs2
@@ -277,43 +278,77 @@ int main()
 
     for (int iz00=1;iz00<Nz_cal;iz00++)
     {
-        std::cout << "I am at step: "<<iz00 <<std::endl;
+        std::cout << " \t ------ I am at step: ------"<<iz00 <<std::endl;
+        
+        time0_all = clock();
 
         // do FFT, for linear part update
+        time0 = clock();
         cufftExecZ2Z(dev_plan_fft2d, dev_phi_old, dev_phi_old_fft, CUFFT_FORWARD);
         cudaThreadSynchronize();
+        time1 = clock();
+        printf(" %0.1f ms : FFT_FORWARD \n", (float)(time1-time0)/CLOCKS_PER_SEC*1e3);
 
+        time0 = clock();
         calphi_omega_linear<<<grid_2d, block_2d>>>(dev_phi_old_fft, dev_exp_linear, Nx_cal, Nt_cal);
         cudaThreadSynchronize();
+        time1 = clock();
+        printf(" %0.1f ms : FFT multipy exp(linear part) \n", (float)(time1-time0)/CLOCKS_PER_SEC*1e3);
         
+        time0 = clock();
         cufftExecZ2Z(dev_plan_fft2d, dev_phi_old_fft, dev_phi_old_fft, CUFFT_INVERSE);
         cudaThreadSynchronize();
+        time1 = clock();
+        printf(" %0.1f ms : FFT_INVERSE \n", (float)(time1-time0)/CLOCKS_PER_SEC*1e3);
 
         // nonlinear part update
+        time0 = clock();
         calRho_X<<<grid_1d, block_1d>>>(dev_rho_e, dev_n_real, dev_n_imag, dev_dn_nonlinear, Nx_cal, Nt_cal, dt, dev_phi_old, dev_mpi_inten, dev_mpi_ionization, dev_laser_paras);
         cudaThreadSynchronize();
+        time1 = clock();
+        printf(" %0.1f ms : calculate delta_n \n", (float)(time1-time0)/CLOCKS_PER_SEC*1e3);
 
+        time0 = clock();
         calexp_nonlinear<<<grid_2d, block_2d>>>(dev_exp_nonlinear, k00, dev_dn_nonlinear, dz, Nx_cal, Nt_cal);
         cudaThreadSynchronize();
+        time1 = clock();
+        printf(" %0.1f ms : calculate exp(nonlinear) \n", (float)(time1-time0)/CLOCKS_PER_SEC*1e3);
 
+        time0 = clock();
         calphi_time_nonlinear<<<grid_2d, block_2d>>>(dev_phi_old, dev_phi_old_fft, dev_exp_nonlinear, Nx_cal, Nt_cal);
         cudaThreadSynchronize();
+        time1 = clock();
+        printf(" %0.1f ms : calculate IFFT(phi*exp(D))*exp(N) \n", (float)(time1-time0)/CLOCKS_PER_SEC*1e3);
 
         // calculate phi_abs2
+        time0 = clock();
         calphi_abs2<<<grid_2d,block_2d>>>(dev_phi_abs2, dev_phi_old, Nx_cal, Nt_cal);
         cudaThreadSynchronize();
+        time1 = clock();
+        printf(" %0.1f ms : get |phi|^2 \n", (float)(time1-time0)/CLOCKS_PER_SEC*1e3);
         
         //
+        time0 = clock();
         cudaMemcpy(host_n_real, dev_n_real, Nx_cal*Nt_cal*sizeof(double), cudaMemcpyDeviceToHost);
         cudaMemcpy(host_n_imag, dev_n_imag, Nx_cal*Nt_cal*sizeof(double), cudaMemcpyDeviceToHost);
         cudaMemcpy(host_rho_e,  dev_rho_e,  Nx_cal*Nt_cal*sizeof(double), cudaMemcpyDeviceToHost);
         cudaMemcpy(host_phi_abs2,  dev_phi_abs2,  Nx_cal*Nt_cal*sizeof(double), cudaMemcpyDeviceToHost);
+        time1 = clock();
+        printf(" %0.1f ms : copy n_real, n_imag, rho_e, phi_abs2 to host \n", (float)(time1-time0)/CLOCKS_PER_SEC*1e3);
 
         // output
+        time0 = clock();
         output_data_real(host_n_real,   "n_real",   iz00, Nx_cal, Nt_cal);
         output_data_real(host_n_imag,   "n_imag",   iz00, Nx_cal, Nt_cal);
         output_data_real(host_rho_e,    "rho_e",    iz00, Nx_cal, Nt_cal);
         output_data_real(host_phi_abs2, "phi_abs2", iz00, Nx_cal, Nt_cal);
+        time1 = clock();
+        printf(" %0.1f ms : output to hdf5 \n", (float)(time1-time0)/CLOCKS_PER_SEC*1e3);
+
+
+        time1_all = clock();
+        printf(" ---------------------- \n");
+        printf(" OVERALL COST: %0.1f ms \n", (float)(time1_all-time0_all)/CLOCKS_PER_SEC*1e3);
 
         
 
