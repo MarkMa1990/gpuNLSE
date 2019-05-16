@@ -30,7 +30,7 @@ __device__ void get_MPIbyIntensity (double &mpi_get, double inten_cal, double *m
     int i=0;
     while(inten_cal > mpi_inten_cal[i+1]) i++;
     mpi_get = (inten_cal-mpi_inten_cal[i])/(mpi_inten_cal[i+1]-mpi_inten_cal[i])*(mpi_ionization_cal[i+1]-mpi_ionization_cal[i]) + mpi_ionization_cal[i];
-
+//    mpi_get = 0;
     }
 }
 

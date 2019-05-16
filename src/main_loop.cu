@@ -54,7 +54,7 @@ void output_data_real(double *data_out, std::string header_name, int step_name, 
 void host_readMPI(double *mpi_inten, double *mpi_ionization)
 {
 
-  FILE *fp1 = fopen("./glass.txt","r");
+  FILE *fp1 = fopen("./glass_reduced.txt","r");
 
   if (!fp1)
       std::cout << "FILE not exists! Please check it again!" << std::endl;
@@ -90,7 +90,7 @@ int main()
 
 
     // space discretization
-    double dx = 60e-9;
+    double dx = 200e-9;
     int Nx_cal = 1024;
     
     // time discretization
@@ -98,8 +98,8 @@ int main()
     int Nt_cal = 1024;
 
     // space in z
-    double dz = 60e-9;
-    int Nz_cal = 10;
+    double dz = 120e-9;
+    int Nz_cal = 1024*4;
 
 
     // init laser paras on device
@@ -202,17 +202,17 @@ int main()
     double *dev_mpi_inten;
     double *dev_mpi_ionization;
 
-    host_mpi_inten      = new double[300003];
-    host_mpi_ionization = new double[300003];
+    host_mpi_inten      = new double[301];
+    host_mpi_ionization = new double[301];
 
-    cudaMalloc((void **) &dev_mpi_inten,        300003*sizeof(double));
-    cudaMalloc((void **) &dev_mpi_ionization,   300003*sizeof(double));
+    cudaMalloc((void **) &dev_mpi_inten,        301*sizeof(double));
+    cudaMalloc((void **) &dev_mpi_ionization,   301*sizeof(double));
 
     // read MPI
     host_readMPI(host_mpi_inten, host_mpi_ionization);
     // copy host data to GPU
-    cudaMemcpy(dev_mpi_inten, host_mpi_inten, 300003*sizeof(double), cudaMemcpyHostToDevice);
-    cudaMemcpy(dev_mpi_ionization, host_mpi_ionization, 300003*sizeof(double), cudaMemcpyHostToDevice);
+    cudaMemcpy(dev_mpi_inten, host_mpi_inten, 301*sizeof(double), cudaMemcpyHostToDevice);
+    cudaMemcpy(dev_mpi_ionization, host_mpi_ionization, 301*sizeof(double), cudaMemcpyHostToDevice);
     cudaThreadSynchronize();
 
 
@@ -278,7 +278,8 @@ int main()
 
     for (int iz00=1;iz00<Nz_cal;iz00++)
     {
-        std::cout << " \t ------ I am at step: ------"<<iz00 <<std::endl;
+        std::cout << std::endl
+                  <<" \t ------ I am at step: ------"<<iz00 <<std::endl;
         
         time0_all = clock();
 
@@ -327,6 +328,8 @@ int main()
         time1 = clock();
         printf(" %0.1f ms : get |phi|^2 \n", (float)(time1-time0)/CLOCKS_PER_SEC*1e3);
         
+        if (iz00 % 20 ==0)
+        {
         //
         time0 = clock();
         cudaMemcpy(host_n_real, dev_n_real, Nx_cal*Nt_cal*sizeof(double), cudaMemcpyDeviceToHost);
@@ -344,17 +347,18 @@ int main()
         output_data_real(host_phi_abs2, "phi_abs2", iz00, Nx_cal, Nt_cal);
         time1 = clock();
         printf(" %0.1f ms : output to hdf5 \n", (float)(time1-time0)/CLOCKS_PER_SEC*1e3);
+        }
 
 
         time1_all = clock();
         printf(" ---------------------- \n");
-        printf(" OVERALL COST: %0.1f ms \n", (float)(time1_all-time0_all)/CLOCKS_PER_SEC*1e3);
+        printf(" OVERALL COST: %0.1f ms \n\n", (float)(time1_all-time0_all)/CLOCKS_PER_SEC*1e3);
 
         
 
     }
 
-
+         printf(" Everything is done. \n");   
 
    // release GPU mem
    cudaFree( dev_mpi_ionization );
