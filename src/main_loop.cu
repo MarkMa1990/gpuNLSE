@@ -243,7 +243,7 @@ int main()
     grid_2d.y = (Nt_cal + block_2d.y - 1) / block_2d.y;
 
         // define GPU paras for 1D, RK4 method
-    int dimx_1d = 32;
+    int dimx_1d = 64;
 
     dim3 block_1d;
     dim3 grid_1d;
