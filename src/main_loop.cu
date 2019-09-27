@@ -54,7 +54,7 @@ void output_data_real(double *data_out, std::string header_name, int step_name, 
 void host_readMPI(double *mpi_inten, double *mpi_ionization)
 {
 
-  FILE *fp1 = fopen("./glass_reduced.txt","r");
+  FILE *fp1 = fopen("./glass_reduced2.txt","r");
 
   if (!fp1)
       std::cout << "FILE not exists! Please check it again!" << std::endl;
@@ -98,8 +98,8 @@ int main()
     int Nt_cal = 1024;
 
     // space in z
-    double dz = 120e-9;
-    int Nz_cal = 1024*4;
+    double dz = 120e-9*5;
+    int Nz_cal = 1024*2;
 
 
     // init laser paras on device
@@ -217,9 +217,9 @@ int main()
 
 
     // initialize E0
-    double w00 = 2.45e-6; //waise of beam
-    double E_pulse = 1.5e-6; //laser pulse energy
-    double tau_pulse = 200e-15;
+    double w00 = 35e-6/2.0; //waise of beam
+    double E_pulse = 0.3e-6; //laser pulse energy
+    double tau_pulse = 300e-15;
     double P0_max = E_pulse / tau_pulse;
     double I0max = P0_max / (M_PI*w00*w00/2.0);
     double E0max = std::sqrt(2.0*I0max/(host_laser_paras[0]*3e8*host_laser_paras[3]));
@@ -243,7 +243,7 @@ int main()
     grid_2d.y = (Nt_cal + block_2d.y - 1) / block_2d.y;
 
         // define GPU paras for 1D, RK4 method
-    int dimx_1d = 64;
+    int dimx_1d = 32;
 
     dim3 block_1d;
     dim3 grid_1d;

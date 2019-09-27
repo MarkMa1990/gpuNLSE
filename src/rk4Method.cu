@@ -58,6 +58,7 @@ __device__ void func_cal(double &rho_e_result, double rho_e_0, double inten_cal,
     get_MPIbyIntensity(wpi_cal0, inten_cal, mpi_inten_cal, mpi_ionization_cal);
     // e^2* tau_colli /( me_eff(omega_wave^2*tau_colli^2+1.0)* c0 *eps_0)
     double sigma_ab_0 = paras[7]*paras[7]*paras[10]/(paras[5]*(paras[14]*paras[14]*paras[10]*paras[10]+1.0)*paras[6]*paras[3]);
+//    printf("%e\n",sigma_ab_0);
     // (wpi + sigma_ab_0/n0/Ueff * I * rho_e)*(1.0-rho_e/rho_max) - rho_e/tau_trap_e
     rho_e_result = (wpi_cal0 + sigma_ab_0/paras[0]*(1.0 + paras[5]/paras[4])/(paras[2]+paras[7]*paras[7]/4.0/paras[5]/paras[14]/paras[14]*inten_cal/(n_real_cal*paras[6]*paras[3]/2.0))*inten_cal*rho_e_0) * (1.0 - rho_e_0/paras[9]) - rho_e_0 / paras[11];
 }
@@ -152,8 +153,8 @@ __global__ void calRho_X(double *data_rho_e_xt, double *data_n_real, double *dat
                 //eps = n0*n0 + 2.0*n0*n2*intensity_time_cal - c0*sigma_ab_0/omega_wave*(omega_wave*tau_colli_e - jj) * rho_electron_cal[ii];
                 eps_time_cal.x = paras[0]*paras[0] + 2.0*paras[0]*paras[1]*inten_now - paras[6]*sigma_ab_0/paras[14]*(paras[14]*paras[10])*rho_new;
                 eps_time_cal.y = paras[6]*sigma_ab_0/paras[14]*(1)*rho_new;
-                data_n_real[ix+i0*Nx] =(double)(sqrtf((float)cuCabs(eps_time_cal) + (float)eps_time_cal.x/sqrtf(2)));
-                data_n_imag[ix+i0*Nx] =(double)(sqrtf((float)cuCabs(eps_time_cal) - (float)eps_time_cal.x/sqrtf(2)));
+                data_n_real[ix+i0*Nx] =(double)(sqrtf((float)cuCabs(eps_time_cal) + (float)eps_time_cal.x)/sqrtf(2));
+                data_n_imag[ix+i0*Nx] =(double)(sqrtf((float)cuCabs(eps_time_cal) - (float)eps_time_cal.x)/sqrtf(2));
 
                 // calculate nonlinear term
 ////      delta_n_cal[ii][0] = n2*n_real_cal[ii]*eps_0*c0/2.0*(Gau_inten_cal[ii][0]*Gau_inten_cal[ii][0]+Gau_inten_cal[ii][1]*Gau_inten_cal[ii][1])
