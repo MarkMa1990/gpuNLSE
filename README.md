@@ -1,4 +1,4 @@
-# nlse_CUDA
+# gpuNLSE
 
 ## Introduction
 <<<2D+1 NLSE with GPU acceleration>>>
