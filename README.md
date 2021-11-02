@@ -9,7 +9,12 @@ The related codes are developed during my Ph.D. studying, if you are interested 
 
 The name 2D relates to x-y coordinates. Light is incident in +z axis. 
 
-
+## Code
+```
+Language: The code was developed in CUDA C/C++. 
+Compile: Windows, Ubuntu with CMake
+Dependencies: HDF5 (for saving result), Boost (just for string handling)
+```
 ## Reference
 
 if you are using the code at current or modified version derived from this project, and if you want to cite the related works, please find as follows:
