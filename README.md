@@ -9,6 +9,8 @@ The related codes are developed during my Ph.D. studying, if you are interested 
 
 The name 2D relates to x-y coordinates. Light is incident in +z axis. 
 
+<img src="https://github.com/MarkMa1990/gpuNLSE/blob/base/figures/figure2.jpg" width="600" height="468">
+
 ## Code
 ```
 Language: The code was developed in CUDA C/C++. 
